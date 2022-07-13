@@ -1,9 +1,9 @@
-;;; consult-ag.el --- The silver searcher integration using Consult -*- lexical-binding: t; -*-
+;;; consult-ugrep.el --- Ugrep integration using Consult -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2022 Kanon Kakuno
+;; Copyright (C) 2022 Joachim Nielandt
 
-;; Author: Kanon Kakuno <yadex205@outlook.jp>
-;; Homepage: https://github.com/yadex205/consult-ag
+;; Author: Joachim Nielandt <joachim.nielandt@gmail.com>
+;; Homepage: https://github.com/joachimnielandt/consult-ugrep
 ;; Package-Requires: ((emacs "27.1") (consult "0.16"))
 ;; SPDX-License-Identifier: MIT
 ;; Version: 0.1.2
@@ -11,24 +11,28 @@
 ;; This file is not part of GNU Emacs.
 
 ;;; Commentary:
+;;; This is a quick modification of the consult-ag package. All props go to yadex205.
 
-;; consult-ag provides interfaces for using `ag` (The Silver Searcher).
-;; To use this, turn on `consult-ag` in your init-file or interactively.
+;; consult-ugrep provides interfaces for using `ugrep`.
+;; To use this, turn on `consult-ugrep` in your init-file or interactively.
 
-;;; Code:
-
-(eval-when-compile ; IDK but required for byte-compile
+(eval-when-compile ;; as mentioned in consult-ag - required for byte-compile
   (require 'cl-lib)
   (require 'subr-x))
 (require 'consult)
 
-(defun consult-ag--builder (input)
+;; define binary ugrep interaction
+(setq ugrep-bin "ugrep")
+(setq ugrep-args "--line-buffered --color=never --ignore-case --bool --files --exclude-dir=.git --line-number --column-number -I -r")
+(setq ugrep-command (concat ugrep-bin " " ugrep-args))
+
+(defun consult-ugrep--builder (input)
   "Build command line given INPUT."
-  (pcase-let* ((cmd (split-string-and-unquote "ag --vimgrep"))
+  (pcase-let* ((cmd (split-string-and-unquote ugrep-command))
                (`(,arg . ,opts) (consult--command-split input)))
     `(,@cmd ,@opts ,arg ".")))
 
-(defun consult-ag--format (line)
+(defun consult-ugrep--format (line)
   "Parse LINE into candidate text."
   (when (string-match "^\\([^:]+\\):\\([0-9]+\\):\\([0-9]+\\):\\(.*\\)$" line)
     (let* ((filename (match-string 1 line))
@@ -41,7 +45,7 @@
                               (propertize column 'face 'consult-line-number) body)))
       (propertize candidate 'filename filename 'row row 'column column))))
 
-(defun consult-ag--grep-position (cand &optional find-file)
+(defun consult-ugrep--grep-position (cand &optional find-file)
   "Return the candidate position marker for CAND.
 FIND-FILE is the file open function, defaulting to `find-file`."
   (when cand
@@ -50,31 +54,31 @@ FIND-FILE is the file open function, defaulting to `find-file`."
           (column (- (string-to-number (get-text-property 0 'column cand)) 1)))
       (consult--position-marker (funcall (or find-file #'find-file) file) row column))))
 
-(defun consult-ag--grep-state ()
+(defun consult-ugrep--grep-state ()
   "Not documented."
   (let ((open (consult--temporary-files))
         (jump (consult--jump-state)))
     (lambda (action cand)
       (unless cand
         (funcall open nil))
-      (funcall jump action (consult-ag--grep-position cand open)))))
+      (funcall jump action (consult-ugrep--grep-position cand open)))))
 
 ;;;###autoload
-(defun consult-ag (&optional target initial)
-  "Consult ag for query in TARGET file(s) with INITIAL input."
+(defun consult-ugrep (&optional target initial)
+  "Consult ugrep for query in TARGET file(s) with INITIAL input."
   (interactive)
-  (let* ((prompt-dir (consult--directory-prompt "Consult ag: " target))
+  (let* ((prompt-dir (consult--directory-prompt "Consult ugrep: " target))
          (default-directory (cdr prompt-dir)))
-    (consult--read (consult--async-command #'consult-ag--builder
-                     (consult--async-map #'consult-ag--format))
+    (consult--read (consult--async-command #'consult-ugrep--builder
+                     (consult--async-map #'consult-ugrep--format))
                    :prompt (car prompt-dir)
                    :lookup #'consult--lookup-member
-                   :state (consult-ag--grep-state)
+                   :state (consult-ugrep--grep-state)
                    :initial (consult--async-split-initial initial)
                    :require-match t
                    :category 'file
                    :sort nil)))
 
-(provide 'consult-ag)
+(provide 'consult-ugrep)
 
-;;; consult-ag.el ends here
+;;; consult-ugrep.el ends here

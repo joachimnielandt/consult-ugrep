@@ -1,21 +1,17 @@
-# consult-ag.el
+# consult-ugrep.el
 
-[The Silver Searcher](https://github.com/ggreer/the_silver_searcher) integration for GNU Emacs using [Consult](https://github.com/minad/consult).
+Based on [consult-ag](https://github.com/yadex205/consult-ag) by Kanon Kakuno. A quick modification to get ugrep up and running within consult.
 
-## Requirements
+[ugrep](https://github.com/Genivia/ugrep) integration for GNU Emacs using [Consult](https://github.com/minad/consult). 
+
+# Requirements
 
 * GNU Emacs >= 27.1
 * Consult >= 1.6
-* The Silver Searcher
+* ugrep
 
-## Usage
+# Usage
 
-### `consult-ag`
+## `consult-ugrep`
 
-Search with `ag`. By default it search for project directory (found by `consult-project-function`),
-otherwise the `default-directory` will be searched.
-
-## Alternatives
-
-* [ag.el](https://github.com/Wilfred/ag.el)
-* [helm-ag.el](https://github.com/emacsorphanage/helm-ag) is another `ag` interface with [helm](https://github.com/emacs-helm/helm)
+Search with `ugrep`. By default it searches the project directory (found by `consult-project-function`), otherwise the `default-directory` will be searched.
